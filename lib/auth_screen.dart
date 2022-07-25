@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import './httpexception.dart';
 import 'package:provider/provider.dart';
 
 import './provider/auth.dart';
@@ -44,7 +45,8 @@ class AuthScreen extends StatelessWidget {
                       padding:
                           EdgeInsets.symmetric(vertical: 8.0, horizontal: 94.0),
                       transform: Matrix4.rotationZ(-8 * pi / 180)
-                        ..translate(-10.0), //.. for not returning void returned by translate because transform expects Matrix4 type
+                        ..translate(
+                            -10.0), //.. for not returning void returned by translate because transform expects Matrix4 type
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.deepOrange.shade900,
@@ -100,7 +102,7 @@ class _AuthCardState extends State<AuthCard> {
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
-  Future<void> _submit() async{
+  Future<void> _submit() async {
     if (!_formKey.currentState.validate()) {
       // Invalid!
       return;
@@ -109,27 +111,61 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      // Log user in
-      await Provider.of<Auth>(context,listen:false).signin(_authData['email'],_authData['password']);
-    } else {
-      await Provider.of<Auth>(context,listen:false).signup(_authData['email'],_authData['password']);
-      // Sign user up
-    }
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      if (_authMode == AuthMode.Login) {
+        // Log user in
+        await Provider.of<Auth>(context, listen: false)
+            .signin(_authData['email'], _authData['password']);
+      } else {
+        await Provider.of<Auth>(context, listen: false)
+            .signup(_authData['email'], _authData['password']);
+        // Sign user up
+      }
+    } on HttpException catch (httpError) {
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: Text('An error occured!'),
+            content: Text(
+              httpError.toString(),
+            ),
+            actions: [
+              RaisedButton(
+                color: Colors.red,
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+                child: Text(
+                  'Ok',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (error) {}
+    setState(
+      () {
+        _isLoading = false;
+      },
+    );
   }
 
   void _switchAuthMode() {
     if (_authMode == AuthMode.Login) {
-      setState(() {
-        _authMode = AuthMode.Signup;
-      });
+      setState(
+        () {
+          _authMode = AuthMode.Signup;
+        },
+      );
     } else {
-      setState(() {
-        _authMode = AuthMode.Login;
-      });
+      setState(
+        () {
+          _authMode = AuthMode.Login;
+        },
+      );
     }
   }
 

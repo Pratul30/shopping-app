@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
             accentColor: Colors.blue,
             fontFamily: 'Lato',
           ),
-          home: ProductsOverviewScreen(),
+          home: AuthScreen(),
           routes: {
             '/product_detail': (context) => ProductsDetail(),
             '/cart_screen': (context) => CartScreen(),
