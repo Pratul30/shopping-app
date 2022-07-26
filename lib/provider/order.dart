@@ -13,6 +13,10 @@ class Order {
 }
 
 class OrderProduct with ChangeNotifier {
+  final String authToken;
+  final String userId;
+  OrderProduct(this.authToken, this.userId, this._orderproduct);
+
   List<Order> _orderproduct = [];
 
   List<Order> get orderproduct {
@@ -21,38 +25,34 @@ class OrderProduct with ChangeNotifier {
 
   Future<void> fetch() async {
     final List<Order> orders = [];
-    final url = Uri.parse('https://shop-10865-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
-    try{
-       final response = await http.get(url);
-       final responsemap = json.decode(response.body) as Map<String,dynamic>;
-       if(responsemap==null)
-       {
-         return ;
-       }
-       responsemap.forEach((key, value) {
-         orders.add(
-           Order(
-             id: key,
-             price: value['price'],
-             datetime: DateTime.parse(value['datetime']),
-             cartitems:  (value['cartitems'] as List<dynamic>).map((cartmap){
-               return Cart(
-                 cartmap['id'],cartmap['title'],cartmap['price'],cartmap['quantity']
-               );
-             }).toList()
-           )
-         );
-       });
-       _orderproduct=orders.reversed.toList();
-       notifyListeners();
-     }catch(error){
-       throw error;
-     }
+    final url = Uri.parse(
+        'https://shop-10865-default-rtdb.asia-southeast1.firebasedatabase.app/orders/$userId.json?auth=$authToken');
+    try {
+      final response = await http.get(url);
+      final responsemap = json.decode(response.body) as Map<String, dynamic>;
+      if (responsemap == null) {
+        return;
+      }
+      responsemap.forEach((key, value) {
+        orders.add(Order(
+            id: key,
+            price: value['price'],
+            datetime: DateTime.parse(value['datetime']),
+            cartitems: (value['cartitems'] as List<dynamic>).map((cartmap) {
+              return Cart(cartmap['id'], cartmap['title'], cartmap['price'],
+                  cartmap['quantity']);
+            }).toList()));
+      });
+      _orderproduct = orders.reversed.toList();
+      notifyListeners();
+    } catch (error) {
+      throw error;
+    }
   }
 
   Future<void> addorder(double total, List<Cart> cartorder) async {
     final url = Uri.parse(
-        'https://shop-10865-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
+        'https://shop-10865-default-rtdb.asia-southeast1.firebasedatabase.app/orders/$userId.json?auth=$authToken');
     try {
       final datetime = DateTime.now();
       final response = await http.post(url,

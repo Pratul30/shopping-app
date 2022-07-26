@@ -4,9 +4,28 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class Auth with ChangeNotifier {
-  String token;
-  DateTime expityToken;
-  String authId;
+  String _token;
+  DateTime _expiryDate;
+  String _userId;
+
+  bool get isAuth {
+    return token != null;
+  }
+
+  String get token {
+    if (_token != null &&
+        _expiryDate != null &&
+        _expiryDate.isAfter(
+          DateTime.now(),
+        )) {
+      return _token;
+    }
+    return null;
+  }
+
+  String get userId {
+    return _userId;
+  }
 
   Future<void> signup(String email, String password) async {
     final url = Uri.parse(
@@ -43,10 +62,19 @@ class Auth with ChangeNotifier {
         ),
       );
       final responseData = json.decode(response.body);
+      _token = responseData['idToken'];
+      _userId = responseData['localId'];
+      _expiryDate = DateTime.now().add(
+        Duration(
+          seconds: int.parse(
+            responseData['expiresIn'],
+          ),
+        ),
+      );
       if (responseData['error'] != null) {
-        print('eeor');
         throw HttpException(responseData['error']['message']);
       }
+      notifyListeners();
     } catch (error) {
       throw error;
     }
