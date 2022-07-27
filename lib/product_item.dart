@@ -46,9 +46,12 @@ class ProductItem extends StatelessWidget {
                               cartitem.removecartproduct(productitem.id);
                             })));
                   })),
-          child: Image.network(
-            productitem.imageUrl,
-            fit: BoxFit.cover,
+          child: Hero(
+            tag: productitem.id,
+            child: Image.network(
+              productitem.imageUrl,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),

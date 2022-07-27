@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import './splash_screen.dart';
 import 'package:provider/provider.dart';
 import './provider/products.dart';
 import './provider/cart.dart';
@@ -50,7 +51,22 @@ class MyApp extends StatelessWidget {
               accentColor: Colors.blue,
               fontFamily: 'Lato',
             ),
-            home: auth.isAuth ? ProductsOverviewScreen() : AuthScreen(),
+            home: auth.isAuth
+                ? ProductsOverviewScreen()
+                : FutureBuilder(
+                    future: auth.tryAutoLogin(),
+                    builder: (ctx, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return SplashScreen();
+                      }
+                      // it will only come here if connectionState resulted in false,
+                      // if it would have resulted true then notifyListeners must have been called
+                      // and then auth.isAuth condition would result in true
+                      // because we would have been logged in by tryAutoLogin().
+                      print('not logged in');
+                      return AuthScreen();
+                    },
+                  ),
             routes: {
               '/product_detail': (context) => ProductsDetail(),
               '/cart_screen': (context) => CartScreen(),
